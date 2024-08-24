@@ -1,9 +1,10 @@
 import mesa
 
 from model import Environment, Bot, Box, Goal
+from agent import Meta, ConvBeltIn, ConvBeltOut, Shelves, Package
 import numpy as np
 
-BOT_COLORS = ["Red", "Blue", "Olive", "Black"]
+BOT_COLORS = ["Red", "Blue", "Olive", "Black", "Yellow"]
 
 
 def agent_portrayal(agent):
@@ -11,15 +12,31 @@ def agent_portrayal(agent):
         return {"Shape": "circle", "Filled": "false", "Color": BOT_COLORS[agent.unique_id - 1], "Layer": 1, "r": 1.0,
                 "text": "🤖", "text_color": "black"}
     elif isinstance(agent, Box):
-        object_emoji = "📦"  #np.random.choice(["📦", "🗿", "🪨", "📚"])
+        object_emoji = "🧱"  #np.random.choice(["📦", "🗿", "🪨", "📚"])
         return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "Black",
                 "Color": "Gray", "text": object_emoji}
     elif isinstance(agent, Goal):
         return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 1, "h": 1, "text_color": "Black",
                 "Color": "white", "text": "️⛳️"}
+    elif isinstance(agent, Meta):
+        return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "Black",
+            "Color": "#ccbeaf", "text": "🚩"}
+    elif isinstance(agent, ConvBeltIn):
+        return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "Black",
+                "Color": "#ccbeaf", "text": "🟩"}
+    elif isinstance(agent, ConvBeltOut):
+        return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "Black",
+                "Color": "#ccbeaf", "text": "🟥"}
+    elif isinstance(agent, Shelves):
+        return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "Black",
+                "Color": "#ccbeaf", "text": "🗄️"}
+    elif isinstance(agent, Package):
+        return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "Black",
+            "Color": "#ccbeaf", "text": "📦"}
     else:
         return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "Black",
                 "Color": "white", "text": ""}
+    
 
 
 grid = mesa.visualization.CanvasGrid(

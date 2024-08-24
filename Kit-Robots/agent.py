@@ -34,7 +34,7 @@ class Bot(Agent):
             self.load_q_values(q_file)
 
     def reset_q_values(self):
-        self.q_values = {(state, action): np.random.uniform(0, .01)
+        self.q_values = {(state, action): np.random.uniform(0, 1)
                          for state in range(self.num_states)
                          for action in range(self.NUM_OF_ACTIONS)}
 
@@ -49,7 +49,7 @@ class Bot(Agent):
         self.next_pos = self.perform(self.pos, self.action)
         self.next_state = self.model.states[self.next_pos]
 
-    def advance(self) -> None:
+    def advance(self) -> None: #--------------------------------------------
         # Check if the agent can move to the next position
         if self.model.grid.is_cell_empty(self.next_pos) or self.next_state in self.model.goal_states:
             if self.next_state in self.model.goal_states:
@@ -76,48 +76,53 @@ class Bot(Agent):
 
         # Update the total return
         self.total_return += reward
+        
 
     def save_q_values(self):
         np.save(f"./q_values{self.unique_id}.npy", self.q_values)
 
-    def train(self):
-        #pass
-        G_history = []
-        G_prom_hist = []
+    def train(self):        
+        initial_pos = self.pos
+        initial_state = self.model.states[initial_pos]
         
         for episodes in range(1000):
             done = False
             G = 0
             episode_step = 1
-            
-            action = None
+            total_return = 0
             pos = self.pos
-            state = self.state
-            
-            reward = 1
-            
+            state = initial_state
+            next_pos = self.pos
+                        
             while not done:
-                next_state = None
                 episode_step += 1
                 
-                action = self.random_policy()
+                action = self.eps_greedy_policy(state)
                 
-                pos = self.perform(pos, action)
-                #next_state, reward, done, _ = env.step(action)
+                #next positions
+                next_pos = self.perform(pos, action)
+                next_state = self.model.states[next_pos]
 
-                Q_list_next_state = [self.q_values[(next_state, act)] for act in range(self.NUM_OF_ACTIONS)]  #env.action_space.n
-                #update rule
-                self.q_values[(state, action)] += self.alpha * (reward + self.gamma * np.max(Q_list_next_state) - self.q_values[(state, action)])
+                #get the reward
+                reward = self.model.rewards[next_state]
+                
+                if next_state in self.model.goal_states:
+                    done = True       
+                                
+                #update q-values line 164 aprx
+                self._update_q_values(state, action, reward, next_state)
+                
+                # Update the total return
+                total_return += reward
+
+                if reward >= 0:
+                    pos = next_pos
+                    state = next_state
                 
                 G += reward
-                state = next_state  
-            
-            G_history.append(G)
-            G_prom_hist.append(G/episode_step)     
-            
-            if episodes % (1000 // 10) == 0:
-                print(f"Episodio {episodes}, Recompensa total: {G}",
-                    f"Recompensa promedio: {np.array(G_history).mean()} ")
+
+            if episodes % 100 == 0:
+                print(f"Episodio {episodes}, Training Step: {episode_step}",f"Recompensa total: {total_return} ")
 
         return self.q_values
     
@@ -158,7 +163,28 @@ class Box(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
 
+class Package(Agent):
+    def __init__(self, unique_id, model):
+        super().__init__(unique_id, model)
+        self.package_num = None
 
 class Goal(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
+
+class Meta(Agent):
+    def __init__(self, unique_id, model):
+        super().__init__(unique_id, model)
+        
+class ConvBeltIn(Agent):
+    def __init__(self, unique_id, model):
+        super().__init__(unique_id, model)
+
+class ConvBeltOut(Agent):
+    def __init__(self, unique_id, model):
+        super().__init__(unique_id, model)
+
+class Shelves(Agent):
+    def __init__(self, unique_id, model):
+        super().__init__(unique_id, model)
+        self.shelves_num = None
