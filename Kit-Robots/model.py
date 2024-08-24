@@ -1,5 +1,5 @@
 from mesa.model import Model
-from agent import Box, Goal, Bot
+from agent import Box, Goal, Bot, Meta, ConvBeltIn, ConvBeltOut, Shelves, Package
 
 from mesa.space import SingleGrid
 from mesa.time import SimultaneousActivation
@@ -8,29 +8,51 @@ from mesa.datacollection import DataCollector
 import numpy as np
 
 
+
 class Environment(Model):
-    DEFAULT_MODEL_DESC = [
-        'BBBBBBBBBBBBBBBBBBBB',
-        'B1FFFFFFFFFFFFFFFB2B',
-        'BBFFFFFBBBBBBFFFFBFB',
-        'BFFBBBBBFFFFBFFBBBFB',
-        'BFFFFBBBFBBBBFFFBFFB',
-        'BBBFBBFFFBBFFFFBBFFB',
-        'BFFBBFFBFFFFBBFFBBFB',
-        'BBFBFFFFBBBFFBBFFFFB',
-        'BFBBFFFFFBGFBBFFFFFB',
-        'BFFFFFFBBFFFFFBBBBBB',
-        'BFFFFBBFFBBBBBBFFFFB',
-        'BBFBBFFFFFBBFFFFBBBB',
-        'BBFFFFBBFFFFBBFFBBFB',
-        'BFFBBBFFFFFBFFFFFBFB',
-        'BFBFBBFFFFFFFBBFFFFB',
-        'BFBBFFBFFFFFBBFBBBBB',
-        'BFFFFFBBFFFFBBFFFFFB',
-        'BFBFBFBFBBFFFFFFBBFB',
-        'B3FFFFFFFBBFFFFFFF4B',
-        'BBBBBBBBBBBBBBBBBBBB'
-    ]
+    DEFAULT_MODEL_DESC = ['BBBBBBBBBBBBBBBBBBBB',
+                        'B1F2FFFFFFFFFFFFFFFB',
+                        'BFFFFFFFFFFFFFFFFFFB',
+                        'BFFFFFFFFFFFFFFFGIIB',
+                        'BFFFFFFFFFFFFFFFFIIB',
+                        'BFFHHHHHHHHFFFFFFFFB',
+                        'BFFHHHHHHHHFFFFFFFFB',
+                        'BFFFGFFFFFFFFFHHFFHB',
+                        'BFFFFFFFFFFFFFHHFFHB',
+                        'BFFHHHHHHHHFFFHHFFHB',
+                        'BFFHHHHHHHHFFFHHFFHB',
+                        'BFFFFFFFFFFFFFFFFFHB',
+                        'BFFFGFFFFFFFFFFF3FFB',
+                        'BFFHHHHHHHHHFFFF4FFB',
+                        'BFFHHHHHHHHHFFFFFFFB',
+                        'BFFFFFFFFFFFFFFFFFFB',
+                        'BFFFFFFFFFFFFFFFFFFB',
+                        'BFFHHHHHHHHHFFGOOFFB',
+                        'BFFFFFFFFFFFFFFOOFFB',
+                        'BBBBBBBBBBBBBBBBBBBB']
+    
+    # DEFAULT_MODEL_DESC = [
+    #     'BBBBBBBBBBBBBBBBBBBB',
+    #     'B1FFFFFFFFFFFFFFFB2B',
+    #     'BBFFFFFBBBBBBFFFFBFB',
+    #     'BFFBBBBBFFFFBFFBBBFB',
+    #     'BFFFFBBBFBBBBFFFBFFB',
+    #     'BBBFBBFFFBBFFFFBBFFB',
+    #     'BFFBBFFBFFFFBBFFBBFB',
+    #     'BBFBFFFFBBBFFBBFFFFB',
+    #     'BFBBFFFFFBFFBBFFFFFB',
+    #     'BFFFGFFBBFFFFFBBBBBB',
+    #     'BFFFFBBFFBBBBBBFFFFB',
+    #     'BBFBBFFFFFBBFFFFBBBB',
+    #     'BBFFFFBBFFFFBBFFBBFB',
+    #     'BFFBBBFFFFFBFFFFFBFB',
+    #     'BFBFBBFFFFFFFBBFFFFB',
+    #     'BFBBFFBFFGFFBBFBBBBB',
+    #     'BFFFFFBBFFFFBBFFFFFB',
+    #     'BFBFBFBFBBFFFFFFBBFB',
+    #     'B3FFFFFFFBBFFFFFFF4B',
+    #     'BBBBBBBBBBBBBBBBBBBB'
+    # ]
 
     def __init__(self, desc=None, q_file=None, train=False):
         super().__init__()
@@ -65,6 +87,12 @@ class Environment(Model):
                 self.goal_states.append(state)
             elif isinstance(a, Box):
                 self.rewards[state] = -1
+            elif isinstance(a, Shelves):
+                self.rewards[state] = -1
+            elif isinstance(a, ConvBeltIn):
+                self.rewards[state] = -1
+            elif isinstance(a, ConvBeltOut):
+                self.rewards[state] = -1
             else:
                 self.rewards[state] = 0
 
@@ -91,7 +119,7 @@ class Environment(Model):
 
         self.schedule.step()
 
-        self.running = not any([a.done for a in self.schedule.agents])
+        self.running = True #not any([a.done for a in self.schedule.agents])
 
     def place_agents(self, desc: list):
         M, N = self.grid.height, self.grid.width
@@ -103,6 +131,15 @@ class Environment(Model):
             elif desc[M - y - 1][x] == 'G':
                 meta = Goal(int(f"10{x}{y}"), self)
                 self.grid.place_agent(meta, (x, y))
+            elif desc[M - y - 1][x] == 'I': #Cinta transportadora/ConvBelt in
+                convBeltIn = ConvBeltIn(int(f"{x}{y}") + 1, self)
+                self.grid.place_agent(convBeltIn, (x, y))
+            elif desc[M - y - 1][x] == 'O': #Cinta transportadora/ConvBelt out
+                convBeltOut = ConvBeltOut(int(f"{x}{y}") + 1, self)
+                self.grid.place_agent(convBeltOut, (x, y))
+            elif desc[M - y - 1][x] == 'H': #shelve
+                shelves = Shelves(int(f"{x}{y}") + 1, self)
+                self.grid.place_agent(shelves, (x, y))
             else:
                 try:
                     bot_num = int(desc[M - y - 1][x])
