@@ -14,19 +14,20 @@ PORT = 8570
 DESC = ['FFFFFFFFFFFFFFFFFFFFFFFF',
         'FFFFFFFFFFFFFFFFFFFFFFFF',
         'FFFFFFFFFFFFFFFFFFFFFFFF',
-        'FFFFFFFFFFFFFFFFGFFFFFFF',
+        'FFFFFFFFFFFFFFFGFFFFFFFF',
         'FFFFFFFFFFBBBBFFFFFFFFFF',
         'FFFFFFFFFFBBBBFFFFFFFFFF',
-        'FFFFFFFFFFFFFFFFFBBFFFFF',
+        'FFFFFFFFFFBBBBFFFBBFFFFF',
         'FFFFFFFFFFFFFFFFBBBBFFFF',
-        'FFFFFFFFFFFFFFFFFBBFFFFF',
+        'FFFFFFFFBBBBBBFFBBBBFFFF',
+        'FFFFFFFFBBBBBBFFFBBFFFFF',
         'FFFFFFFFBBBBBBFFFFFFFFFF',
         'FFFFFFFFBBBBBBFFFFFFFFFF',
         'FFFFFFFFFFFFFFFFFFFFFFFF',
-        'FFFFFFFFFFFFFFFFFFFFFFFF',
-        'FFFFFFFFFFFSFFFFFFFFFFFF',
+        'FFFFFFFFFFFFFFFFFFSFFFFF',
         'FFFFFFFFFFFFFFFFFFFFFFFF',
         'FFFFFFFFFFFFFFFFFFFFFFFF',]#16X24
+
 
 # DESC = ['FFFFFFFFFFFF',
 # 	'FFFFFFFFFGFF',
@@ -94,10 +95,10 @@ def a_star(desc):
     # Get the maze, start, and end positions
     maze, start, end = from_desc_to_maze(desc)
 
-    # Define the movements (down, up, right, left)
+    #Define the movements (down, up, right, left)
     movements = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
-    # Initialize the open list as a heap and the closed list
+    #Initialize the open list as a heap and the closed list
     open_list = []  # f-score, position
     heapq.heappush(open_list, (0, start))  # f-score, position
     closed_list = set()
@@ -108,7 +109,7 @@ def a_star(desc):
 
     g_score = {start: 0}
 
-    # A* algorithm
+    #A* algorithm
     while open_list:
         # Get the current node with the lowest f-score
         _, current = heapq.heappop(open_list)

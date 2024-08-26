@@ -5,6 +5,12 @@ from mesa.space import SingleGrid
 from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
 
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import logging
+import json
+
+PORT = 8570
+
 import numpy as np
 
 
@@ -31,29 +37,6 @@ class Environment(Model):
                         'BFFFFFFFFFFFFFFOOFFB',
                         'BBBBBBBBBBBBBBBBBBBB']
     
-    # DEFAULT_MODEL_DESC = [
-    #     'BBBBBBBBBBBBBBBBBBBB',
-    #     'B1FFFFFFFFFFFFFFFB2B',
-    #     'BBFFFFFBBBBBBFFFFBFB',
-    #     'BFFBBBBBFFFFBFFBBBFB',
-    #     'BFFFFBBBFBBBBFFFBFFB',
-    #     'BBBFBBFFFBBFFFFBBFFB',
-    #     'BFFBBFFBFFFFBBFFBBFB',
-    #     'BBFBFFFFBBBFFBBFFFFB',
-    #     'BFBBFFFFFBFFBBFFFFFB',
-    #     'BFFFGFFBBFFFFFBBBBBB',
-    #     'BFFFFBBFFBBBBBBFFFFB',
-    #     'BBFBBFFFFFBBFFFFBBBB',
-    #     'BBFFFFBBFFFFBBFFBBFB',
-    #     'BFFBBBFFFFFBFFFFFBFB',
-    #     'BFBFBBFFFFFFFBBFFFFB',
-    #     'BFBBFFBFFGFFBBFBBBBB',
-    #     'BFFFFFBBFFFFBBFFFFFB',
-    #     'BFBFBFBFBBFFFFFFBBFB',
-    #     'B3FFFFFFFBBFFFFFFF4B',
-    #     'BBBBBBBBBBBBBBBBBBBB'
-    # ]
-
     def __init__(self, desc=None, q_file=None, train=False):
         super().__init__()
         self._q_file = q_file
@@ -97,8 +80,9 @@ class Environment(Model):
                 self.rewards[state] = 0
 
         reporters = {
-            f"Bot{i+1}": lambda m, i=i: m.schedule.agents[i].total_return for i in range(len(self.schedule.agents))
+            f"Bot{i+1}": lambda m, i=i: m.schedule.agents[i].total_return for i in range(len(self.schedule.agents)) 
         }
+        
         # Data collector
         self.datacollector = DataCollector(
             model_reporters=reporters
@@ -109,8 +93,8 @@ class Environment(Model):
         
 
     def step(self):
-        # Train the agents in the environment
-        if self.train and self._q_file is not None:
+        #Train the agents in the environment
+        if self.train and self._q_file is not None: #Q-values
             for agent in self.schedule.agents:
                 agent.train()
                 self.train = False
@@ -120,6 +104,8 @@ class Environment(Model):
         self.schedule.step()
 
         self.running = True #not any([a.done for a in self.schedule.agents])
+        
+
 
     def place_agents(self, desc: list):
         M, N = self.grid.height, self.grid.width

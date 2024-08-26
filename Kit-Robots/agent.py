@@ -2,6 +2,7 @@ from mesa.agent import Agent
 import numpy as np
 
 
+
 class Bot(Agent):
 
     MAX_NUM_TRAINING_STEPS = 1000
@@ -93,7 +94,6 @@ class Bot(Agent):
             pos = self.pos
             state = initial_state
             next_pos = self.pos
-                        
             while not done:
                 episode_step += 1
                 
@@ -126,6 +126,9 @@ class Bot(Agent):
 
         return self.q_values
     
+    def trainA(self):
+        
+        return []
 
     def load_q_values(self, q_file):
         try:
