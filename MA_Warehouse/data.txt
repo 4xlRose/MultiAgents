@@ -1,0 +1,1 @@
+self.pos_array: [{'id': 4, 'x': 11, 'y': 14}]
