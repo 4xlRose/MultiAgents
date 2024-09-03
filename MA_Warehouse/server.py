@@ -3,7 +3,7 @@ from mesa.visualization.ModularVisualization import VisualizationElement
 import matplotlib.pyplot as plt
 import io
 import base64
-from model import Environment, Bot, Box, Goal
+from model import Environment, Bot, Box, Goal   
 from agent import Meta, ConvBeltIn, ConvBeltOut, Shelves
 
 import os
@@ -65,12 +65,12 @@ def get_maze_files():
 
 # A function to read the number of bots in the environment
 def get_num_bots():
-    dummy_model = Environment()
+    dummy_model = Environment(desc_file="WH.txt")
     return len(dummy_model.schedule.agents)
 
 
 grid = mesa.visualization.CanvasGrid(
-    agent_portrayal, 20, 20, 600, 600)
+    agent_portrayal, 41, 41, 600, 600)
 
 # Create a chart to track the battery of the robots
 chart_charges = mesa.visualization.ChartModule(
@@ -91,7 +91,7 @@ def model_params():
     params["desc_file"] = mesa.visualization.Choice(
         name="Maze",
         choices=get_maze_files(),
-        value='None',
+        value='WH.txt',
         description="Choose the maze file",
     )
 

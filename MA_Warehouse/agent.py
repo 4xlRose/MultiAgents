@@ -54,6 +54,7 @@ class Bot(Agent):
     def step(self) -> None:
         if self.state is None:
             self.state = self.model.states[self.pos]
+            
 
         # Agent chooses an action from the policy
         self.action = self.eps_greedy_policy(self.state)
@@ -76,6 +77,12 @@ class Bot(Agent):
 
             # Update the state
             self.state = self.next_state
+            
+            print(f"self state: {self.state}, model goal states: {self.model.goal_states}")
+
+            if self.state in self.model.goal_states:
+                print("Q_file loaded 1 ------------------------------")
+                self.load_q_values("qf_bot1_rute_three")
 
             # Get the reward
             reward = self.model.rewards[self.next_state]
@@ -83,7 +90,7 @@ class Bot(Agent):
         else:
             # If the agent cannot move to the next position, the reward is -2
             reward = -2
-
+            
         # Update the q-values
         self._update_q_values(self.state, self.action, reward, self.next_state)
 
@@ -93,24 +100,33 @@ class Bot(Agent):
         # Reduce epsilon for exploration-exploitation tradeoff for each 100 movements
         if self.movements % 100 == 0 and self.model.enable_decay:
             self.epsilon = max(self.min_epsilon, self.epsilon * self.decay_rate)
+        
+
+            # print("Q_file loaded 0 ------------------------------")
+            # with open(f"{self.BASE_PATH}/qf_bot1_rute_three.json", "r") as f:
+            #     print("Q_file loaded 2 ------------------------------")
+
+            #     self.load_q_values(f) #Actualizar la ruta del agente con el nuevo qfile
+            #     print("Q_file loaded 1 ------------------------------")
+        
             
         print(f"self.pos_array: {self.pos_array}") #---------------
+            
+
+
+    # def add_data(self, id_value, x, y):
+    #     # Crear un diccionario con los datos
+    #     data_dict = {"id": id_value, "x": x, "y": y}
+    #     filename = f"bot{id_value}.json"
+    #     data_array = self.data_array
+    #     # Añadir el diccionario a la lista
+    #     data_array.append(data_dict)
         
+    #     # Guardar los datos en el archivo JSON
+    #     with open(filename, 'w') as file:
+    #         json.dump(data_array, file, indent=4)
 
-
-    def add_data(self, id_value, x, y):
-        # Crear un diccionario con los datos
-        data_dict = {"id": id_value, "x": x, "y": y}
-        filename = f"bot{id_value}.json"
-        data_array = self.data_array
-        # Añadir el diccionario a la lista
-        data_array.append(data_dict)
-        
-        # Guardar los datos en el archivo JSON
-        with open(filename, 'w') as file:
-            json.dump(data_array, file, indent=4)
-
-        print(f"Datos añadidos y guardados en {filename}")
+    #     #print(f"Datos añadidos y guardados en {filename}")
 
 
     def train(self, episodes=200, alpha=0.1, gamma=0.9, log_interval=10):
@@ -211,8 +227,12 @@ class Bot(Agent):
         next_pos = (x, y)
         self.pos_array = []
         self.pos_array.append({"id": self.unique_id, "x": pos[0], "y": pos[1]})
-        self.add_data(self.unique_id, pos[0], pos[1])
+        #self.add_data(self.unique_id, pos[0], pos[1])
         return next_pos
+    
+    def get_pos(self):
+        unique_id = self.unique_id
+        return unique_id, self.pos[0], self.pos[1]
     
     def random_policy(self):
         return np.random.randint(self.NUM_OF_ACTIONS)

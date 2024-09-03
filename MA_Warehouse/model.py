@@ -6,29 +6,30 @@ from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
 
 import numpy as np
-
+  
 
 class Environment(Model):
-    DEFAULT_MODEL_DESC =  ['BBBBBBBBBBBBBBBBBBBB',
-                        'B1F2F3F4F5FFFFFFFFFB',
-                        'BFFFFFFFFFFFFFFFFFFB',
-                        'BFFFFFFFFFFFFFFFGIIB',
-                        'BFFFFFFFFFFFFFFFFIIB',
-                        'BFFHHHHHHHHFFFFFFFFB',
-                        'BFFHHHHHHHHFFFFFFFFB',
-                        'BFFFGFFFFFFFFFHHFFHB',
-                        'BFFFFFFFFFFFFFHHFFHB',
-                        'BFFHHHHHHHHFFFHHFFHB',
-                        'BFFHHHHHHHHFFFHHFFHB',
-                        'BFFFFFFFFFFFFFFFFFHB',
-                        'BFFFGFFFFFFFFFFFFFFB',
-                        'BFFHHHHHHHHHFFFFFFFB',
-                        'BFFHHHHHHHHHFFFFFFFB',
-                        'BFFFFFFFFFFFFFFFFFFB',
-                        'BFFFFFFFFFFFFFFFFFFB',
-                        'BFFHHHHHHHHHFFGOOFFB',
-                        'BFFFFFFFFFFFFFFOOFFB',
-                        'BBBBBBBBBBBBBBBBBBBB']
+    DEFAULT_MODEL_DESC =   ['BBBBBBBBBBBBBBBBBBBBB',
+                            'BFFFFFFFFFFFFFFFFFFFB',
+                            'B1FF2FF3FFFFFFFFFFFFB',
+                            'BFFFFFFFFFFFFFFFFFFFB',
+                            'BFFFFFFFFFFFFFFFFGIIB',
+                            'BFFFFFFFFFFFFFFFFFIIB',
+                            'BFFHHHHHHHHFFFFFFFFFB',
+                            'BFFHHHHHHHHFFFFFFFFFB',
+                            'BFFFFFFFFFFFFFFHHFFHB',
+                            'BFFFFFFFFFFFFFFHHFFHB',
+                            'BFFHHHHHHHHFFFFHHFFHB',
+                            'BFFHHHHHHHHFFFFHHFFHB',
+                            'BFFFFFFFFFFFFFFFFFFHB',
+                            'BFFFFFFFFFFFFFFFFFFFB',
+                            'BFFHHHHHHHHHFFFFFFFFB',
+                            'BFFHHHHHHHHHFFFFFFFFB',
+                            'BFFFFFFFFFFFFFFFFFFFB',
+                            'BFFFFFFFFFFFFFFFFFFFB',
+                            'BFFHHHHHHHHHFFFOOFFFB',
+                            'BFFFFFFFFFFFFFFOOFFFB',
+                            'BBBBBBBBBBBBBBBBBBBBB']
 
     def __init__(self, desc_file=None, **kwargs):
         super().__init__()
@@ -80,7 +81,7 @@ class Environment(Model):
         self.rewards = {}
         for state, cell in enumerate(self.grid.coord_iter()):
             a, pos = cell
-
+            #print(f"pos: {pos}") pos da todas las cordenadas
             # Define states for the environment
             self.states[pos] = state
 
@@ -116,12 +117,17 @@ class Environment(Model):
             if self.__getattribute__(f"train_bot{bot_id}"):
                 bot.train(episodes=self.train_episodes, alpha=self.alpha, gamma=self.gamma)
                 self.__setattr__(f"train_bot{bot_id}", False)
+                
+        for agent in self.schedule.agents:
+            print(f"Agent ID: {agent.unique_id}, Agent POS{agent.pos}")
+
 
         self.datacollector.collect(self)
 
         self.schedule.step()
+        
 
-        self.running = True #not any([a.done for a in self.schedule.agents])
+        self.running = True #not any([a.done for a in self.schedule.agents]) #True
 
     def place_agents(self, desc: list):
         M, N = self.grid.height, self.grid.width
@@ -145,14 +151,15 @@ class Environment(Model):
             else:
                 try:
                     bot_num = int(desc[M - y - 1][x])
-                    q_file = eval(f"self.q_file_bot{bot_num}")
+                    q_file = eval(f"self.q_file_bot{bot_num}") #inicializa q-file
                     bot = Bot(int(f"{bot_num}"), self, q_file, self.epsilon)
                     self.grid.place_agent(bot, (x, y))
                     self.schedule.add(bot)
                     self.bots[bot_num] = bot
-
                 except ValueError:
+                    #print("ValueError")
                     pass
+                
 
     @staticmethod
     def from_txt_to_desc(file_path):
@@ -172,3 +179,45 @@ class Environment(Model):
         except Exception as e:
             print(f"Error reading the file: {e}")
             return None
+
+
+# ['BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHHFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFOOB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHFFFHFFFHFFFOOB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHFFFHFFFHFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHHFFFFFFHFFFHFFFHFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHHFFFFFFHFFFHFFFHFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHFFFHFFFHFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHFFFHFFFHFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHFFFHFFFHFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHFFFHFFFHFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFBFFFFFFFFBBFFFFFFBBFFFFFFFFBFFFFFB',
+# 'BFFFFFBFFFFFFFFBBFFFFFFBBGFFFFFFFBFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHHFFFFHFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHHFFFFHFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHHFFFFHFFFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHFFFFFFFHHFFFFHFFFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHFFFFFFFHHFFFFHFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHHFFFFHFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHHFFFFHFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFHHFFFFHFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFHHHHHHHHHHHHHHHFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB',
+# 'BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIIFFB',
+# 'BFFFFFFFFFFFFFFFFFF5FF4FF3FF2FF1FFFIIFFB',
+# 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB']
