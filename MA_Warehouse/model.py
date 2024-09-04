@@ -127,6 +127,7 @@ class Environment(Model):
         self.schedule.step()
         
         #self.running = not any([a.done for a in self.schedule.agents]) 
+        
         self.running = True
 
 
