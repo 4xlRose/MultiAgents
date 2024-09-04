@@ -126,8 +126,9 @@ class Environment(Model):
 
         self.schedule.step()
         
+        #self.running = not any([a.done for a in self.schedule.agents]) 
+        self.running = True
 
-        self.running = True #not any([a.done for a in self.schedule.agents]) #True
 
     def place_agents(self, desc: list):
         M, N = self.grid.height, self.grid.width

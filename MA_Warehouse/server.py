@@ -17,7 +17,7 @@ def agent_portrayal(agent):
         return {"Shape": "circle", "Filled": "false", "Color": BOT_COLORS[agent.unique_id - 1], "Layer": 1, "r": 1.0,
                 "text": f"{agent.unique_id}", "text_color": "black"}
     elif isinstance(agent, Box):
-        object_emoji = "📦"
+        object_emoji = "🧱"
         return {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "#2F4F4F",
                 "Color": "rgba(112, 66, 20, 0.5)", "text": object_emoji}
     elif isinstance(agent, Goal):
@@ -121,7 +121,7 @@ def model_params():
     params["train_episodes"] = mesa.visualization.Slider(
         name="Train Episodes",
         min_value=1,
-        max_value=10000,
+        max_value=15000,
         value=200,
         step=100,
         description="Number of training episodes",
@@ -156,7 +156,7 @@ def model_params():
 
 server = mesa.visualization.ModularServer(
     Environment, [grid, chart_charges],
-    "Bot Wars of the Ever-Shifting Maze!", model_params(), 6969
+    "Warehouse Simulation", model_params(), 6969
 )
 
 server.launch(open_browser=True)
