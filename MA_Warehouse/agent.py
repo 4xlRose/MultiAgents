@@ -1,7 +1,11 @@
-import json
 import os
 from datetime import datetime
 import json
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from time import time
 
 import os
 
@@ -37,6 +41,7 @@ class Bot(Agent):
         self.pos_array = []
         self.data_array = []
         self.route = 1
+        self.dimension = (41, 41)
         
 
 
@@ -55,7 +60,14 @@ class Bot(Agent):
     def step(self) -> None:
         if self.state is None:
             self.state = self.model.states[self.pos]
-            
+        
+        print(f"self state: {self.state}, model goal states: {self.model.goal_states}")
+        if self.state in self.model.goal_states:
+            self.plot_action_value_grid(self.q_values, self.dimension)
+            self.route += 1
+            print(f"unique id: {self.unique_id} Numero de ruta: {self.route}")
+            self.load_q_values(f"qf_bot{self.unique_id}_r_{self.route}")
+            print("Q_file loaded -------------------------------------------------")
 
         # Agent chooses an action from the policy
         self.action = self.eps_greedy_policy(self.state)
@@ -79,38 +91,33 @@ class Bot(Agent):
             # Update the state
             self.state = self.next_state
             
-            print(f"self state: {self.state}, model goal states: {self.model.goal_states}")
-            if self.state in self.model.goal_states:
-                self.route += 1
-                print(f"unique id: {self.unique_id} Numero de ruta: {self.route}")
-                self.load_q_values(f"qf_bot{self.unique_id}_r_{self.route}")
-                print("Q_file loaded -------------------------------------------------")
+            
 
             # Get the reward
-            reward = self.model.rewards[self.next_state]
+            reward = self.model.rewards[self.state]
 
         else:
             # If the agent cannot move to the next position, the reward is -2
             reward = -2
             
         # Update the q-values
-        self._update_q_values(self.state, self.action, reward, self.next_state)
+        #self._update_q_values(self.state, self.action, reward, self.next_state)
 
         # Update the total return
         self.total_return += reward
 
         # Reduce epsilon for exploration-exploitation tradeoff for each 100 movements
-        if self.movements % 100 == 0 and self.model.enable_decay:
-            self.epsilon = max(self.min_epsilon, self.epsilon * self.decay_rate)
+        # if self.movements % 100 == 0 and self.model.enable_decay:
+        #     self.epsilon = max(self.min_epsilon, self.epsilon * self.decay_rate)
             
         print(f"self.pos_array: {self.pos_array}") #---------------
             
 
 
-    def add_data(self, id_value, x, y):
+    def add_data(self, id_value, x, y, route):
         # Crear un diccionario con los datos
-        data_dict = {"id": id_value, "x": x, "y": y}
-        filename = f"bot{id_value}.json"
+        data_dict = {"id": id_value, "x": x, "y": y, "route": route}
+        filename = f"robot_{id_value}.json"
         data_array = self.data_array
         # Añadir el diccionario a la lista
         data_array.append(data_dict)
@@ -149,7 +156,7 @@ class Bot(Agent):
                 training_step += 1
 
                 # Choose an action using the epsilon-greedy policy
-                action = self.eps_greedy_policy(state)
+                action = self.random_policy(state) #eps_greedy_policy
 
                 # Perform the action and get the next state
                 next_pos = self.perform(pos, action)
@@ -220,7 +227,7 @@ class Bot(Agent):
         next_pos = (x, y)
         self.pos_array = []
         self.pos_array.append({"id": self.unique_id, "x": pos[0], "y": pos[1]})
-        #self.add_data(self.unique_id, pos[0], pos[1])-------------------------------------------------------------------------------
+        #self.add_data(self.unique_id, pos[0], pos[1], self.route) #-------------------------------------------------------------------------------
         return next_pos
     
     def get_pos(self):
@@ -242,6 +249,80 @@ class Bot(Agent):
         q_values = [self.q_values[next_state, action] for action in range(self.NUM_OF_ACTIONS)]
         max_q_value = np.max(q_values)
         self.q_values[state, action] += alpha * (reward + gamma * max_q_value - self.q_values[state, action])
+    
+    
+    @staticmethod
+    def plot_action_value_grid(action_value_pairs, dimensions):
+        #""" Plots the State_Value_Grid """
+        def quatro_matrix(left, bottom, right, top, ax=None, triplotkw=None, tripcolorkw=None):
+            triplotkw = {} if triplotkw is None else triplotkw
+            tripcolorkw = {} if tripcolorkw is None else tripcolorkw
+            if not ax: ax = plt.gca()
+            n = left.shape[0]
+            m = left.shape[1]
+
+            a = np.array([[0, 0], [0, 1], [.5, .5], [1, 0], [1, 1]])
+            tr = np.array([[0, 1, 2], [0, 2, 3], [2, 3, 4], [1, 2, 4]])
+
+            A = np.zeros((n * m * 5, 2))
+            Tr = np.zeros((n * m * 4, 3))
+
+            for i in range(n):
+                for j in range(m):
+                    k = i * m + j
+                    A[k * 5:(k + 1) * 5, :] = np.c_[a[:, 0] + j, a[:, 1] + i]
+                    Tr[k * 4:(k + 1) * 4, :] = tr + k * 5
+
+            C = np.c_[left.flatten(), bottom.flatten(),
+                    right.flatten(), top.flatten()].flatten()
+
+            triplot = ax.triplot(A[:, 0], A[:, 1], Tr, **triplotkw)
+            tripcolor = ax.tripcolor(A[:, 0], A[:, 1], Tr, facecolors=C, **tripcolorkw)
+            return tripcolor
+        
+        num_rows, num_cols = dimensions
+
+        state_values_grid = np.zeros((*dimensions, 4))
+        for pair, value in action_value_pairs.items():
+            state, action = pair
+            row, col = np.unravel_index(state, dimensions)
+            state_values_grid[row][col][action] = value
+
+        left = state_values_grid[:, :, 0].T
+        bottom = state_values_grid[:, :, 1].T
+        right = state_values_grid[:, :, 2].T
+        top = state_values_grid[:, :, 3].T  
+
+        top_value_pos = [(x + .38, y + .25)
+                        for y in range(num_rows) for x in range(num_cols)]
+        right_value_pos = [(x + .65, y + .5)
+                        for y in range(num_rows) for x in range(num_cols)]
+        bottom_value_pos = [(x + .38, y + .8)
+                            for y in range(num_rows) for x in range(num_cols)]
+        left_value_pos = [(x + .05, y + .5)
+                        for y in range(num_rows) for x in range(num_cols)]
+
+        fig, ax = plt.subplots(figsize=(8, 8))
+        ax.set_ylim(num_rows, 0)
+        tripcolor = quatro_matrix(left, top, right, bottom,
+                                ax=ax,
+                                triplotkw={"color": "k", "lw": 1},
+                                tripcolorkw={"cmap": "coolwarm"})
+        ax.margins(0)
+        ax.set_aspect("equal")
+        # fig.colorbar(tripcolor)
+
+        # for i, (xi, yi) in enumerate(top_value_pos):
+        #     plt.text(xi, yi, round(top.flatten()[i], 2), size=11, color="k")
+        # for i, (xi, yi) in enumerate(right_value_pos):
+        #     plt.text(xi, yi, round(right.flatten()[i], 2), size=11, color="k")
+        # for i, (xi, yi) in enumerate(left_value_pos):
+        #     plt.text(xi, yi, round(left.flatten()[i], 2), size=11, color="k")
+        # for i, (xi, yi) in enumerate(bottom_value_pos):
+        #     plt.text(xi, yi, round(bottom.flatten()[i], 2), size=11, color="k")
+        ax.axis(False)
+
+        plt.show()
 
 
 class Box(Agent):
